@@ -1,0 +1,76 @@
+-- ============================================================================
+-- CHIZHAUU FINAL SCRIPT - ALL IN ONE
+-- ============================================================================
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Window = Fluent:CreateWindow({Title = "ChizHauu Menu", SubTitle = "All-In-One Pro", TabWidth = 160, Size = UDim2.fromOffset(580, 460), Theme = "Dark"})
+
+-- 1. BIẾN CẤU HÌNH
+getgenv().Kaitun = false
+getgenv().ESPPlayer = false
+
+-- 2. CÁC TAB
+local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
+
+-- 3. CÁC TÍNH NĂNG
+MainTab:AddToggle("KaitunToggle", {Title = "🚀 Auto Farm (A-Z)", Default = false}):OnChanged(function(Value) getgenv().Kaitun = Value end)
+ESPTab:AddToggle("ESPPlayer", {Title = "👤 ESP Người Chơi", Default = false}):OnChanged(function(Value) getgenv().ESPPlayer = Value end)
+
+-- 4. LOGIC GOM QUÁI (ANTI-SEA: CHỈ HÚT KHI GẦN < 300)
+function BringMobs(mobName)
+    pcall(function()
+        local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+            if v.Name == mobName and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                if (v.HumanoidRootPart.Position - hrp.Position).Magnitude < 300 then
+                    v.HumanoidRootPart.CFrame = hrp.CFrame * CFrame.new(0, -10, -5)
+                    v.HumanoidRootPart.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+-- 5. LOGIC AUTO FARM A-Z
+task.spawn(function()
+    while task.wait(0.5) do
+        if getgenv().Kaitun then
+            pcall(function()
+                local player = game.Players.LocalPlayer
+                local questGui = player.PlayerGui.Main.Quest
+                if not questGui.Visible then
+                    player.Character.HumanoidRootPart.CFrame = CFrame.new(1059, 16, 1550) -- Tọa độ Bandit
+                    task.wait(1)
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", "BanditQuest1", 1)
+                else
+                    BringMobs("Bandit")
+                    game:GetService("VirtualUser"):CaptureController()
+                    game:GetService("VirtualUser"):ClickButton1(Vector2.new(50, 50))
+                end
+            end)
+        end
+    end
+end)
+
+-- 6. NÚT BẬT/TẮT (HÌNH VUÔNG/TRÒN)
+local CoreGui = game:GetService("CoreGui")
+if CoreGui:FindFirstChild("ChizHauu_Toggle") then CoreGui["ChizHauu_Toggle"]:Destroy() end
+local ToggleBtn = Instance.new("ImageButton", Instance.new("ScreenGui", CoreGui))
+ToggleBtn.Name = "ChizHauu_Toggle"
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.Image = "rbxassetid://15121650304"
+ToggleBtn.Draggable = true
+
+-- Chỉnh CornerRadius: 0 = Vuông, 1 = Tròn
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 0) 
+Instance.new("UIStroke", ToggleBtn).Color = Color3.fromRGB(0, 255, 127)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    local f = CoreGui:FindFirstChild("Fluent")
+    if f then f.Enabled = not f.Enabled end
+end)
+
+Fluent:Notify({Title = "ChizHauu", Content = "Script đã nạp toàn bộ tính năng!", Duration = 3})
