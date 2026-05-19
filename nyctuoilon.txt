@@ -1,0 +1,208 @@
+-- ============================================================================
+-- CHIZHAUU SCRIPT - FULL PURE VERSION (FIXED & OPTIMIZED)
+-- ============================================================================
+
+-- 1. CẤU HÌNH BIẾN TOÀN CỤC
+getgenv().Kaitun = false
+getgenv().AutoFarmBones = false
+getgenv().AutoRandomBones = false
+getgenv().ESPMirage = false
+getgenv().ESPGear = false
+getgenv().ESPFruit = false
+getgenv().ESPPlayer = false
+
+local MenuIconID = "rbxassetid://15121650304"
+
+-- 2. DỮ LIỆU ĐẢO VÀ NHIỆM VỤ (SEA 1, 2, 3)
+local Sea1_Islands = {
+    ["Starter Island"] = CFrame.new(1059, 16, 1550),
+    ["Jungle"] = CFrame.new(-1598, 36, 153),
+    ["Pirate Village"] = CFrame.new(-1120, 4, 3855),
+    ["Middle Town"] = CFrame.new(-650, 8, 1723),
+    ["Frozen Village"] = CFrame.new(1193, 6, -1157),
+    ["Marineford"] = CFrame.new(-2439, 73, 1470),
+    ["Skypiea"] = CFrame.new(-1242, 354, -5902),
+    ["Prison"] = CFrame.new(4875, 6, 745),
+    ["Magma Village"] = CFrame.new(-5242, 12, 8503),
+    ["Underwater City"] = CFrame.new(3865, 6, -1926),
+    ["Fountain City"] = CFrame.new(5121, 6, 4111)
+}
+
+local Sea2_Islands = {
+    ["The Cafe"] = CFrame.new(-380, 73, 297),
+    ["Kingdom of Rose"] = CFrame.new(-429, 73, 536),
+    ["Green Zone"] = CFrame.new(-2450, 73, -2650),
+    ["Graveyard"] = CFrame.new(-2850, 73, 1500),
+    ["Snow Mountain"] = CFrame.new(1000, 150, -1000),
+    ["Hot and Cold"] = CFrame.new(-5700, 50, -1200),
+    ["Cursed Ship"] = CFrame.new(923, 125, 32885),
+    ["Ice Castle"] = CFrame.new(5700, 30, -5100),
+    ["Forgotten Island"] = CFrame.new(-3000, 250, -10000)
+}
+
+local Sea3_Islands = {
+    ["Castle on the Sea"] = CFrame.new(-5045, 315, -3150),
+    ["Port Town"] = CFrame.new(-290, 70, 5300),
+    ["Hydra Island"] = CFrame.new(5210, 600, 345),
+    ["Floating Turtle"] = CFrame.new(-2850, 530, -4300),
+    ["Haunted Castle"] = CFrame.new(-9515, 160, 5520),
+    ["Ice and Fire"] = CFrame.new(-6000, 300, -6000)
+}
+
+local CurrentSea = 1
+local TargetPositions = Sea1_Islands
+local IslandList = {}
+
+if game.PlaceId == 275391513 or game.PlaceId == 4442272183 then
+    CurrentSea = 1 TargetPositions = Sea1_Islands
+elseif game.PlaceId == 740581508 or game.PlaceId == 12903714932 then
+    CurrentSea = 2 TargetPositions = Sea2_Islands
+elseif game.PlaceId == 142823291 or game.PlaceId == 14352271887 then
+    CurrentSea = 3 TargetPositions = Sea3_Islands
+end
+for name, _ in pairs(TargetPositions) do table.insert(IslandList, name) end
+
+-- 3. KHỞI TẠO GIAO DIỆN FLUENT
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Window = Fluent:CreateWindow({
+    Title = "ChizHauu Menu",
+    SubTitle = "Pure Version (Full Sea)",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Theme = "Dark"
+})
+
+local MainTab = Window:AddTab({ Title = "Main Kaitun", Icon = "home" })
+local TeleportTab = Window:AddTab({ Title = "Teleport", Icon = "map-pin" }) 
+local RaceV4Tab = Window:AddTab({ Title = "Up Race V4", Icon = "star" }) 
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
+
+-- UI: MAIN TAB
+MainTab:AddToggle("KaitunToggle", {Title = "🚀 Auto Farm Level (Full Sea)", Default = false}):OnChanged(function(Value) getgenv().Kaitun = Value end)
+MainTab:AddToggle("FarmBoneToggle", {Title = "☠️ Auto Farm Xương (Sea 3)", Default = false}):OnChanged(function(Value) getgenv().AutoFarmBones = Value end)
+MainTab:AddToggle("RandomBoneToggle", {Title = "🎁 Auto Random Xương", Default = false}):OnChanged(function(Value) getgenv().AutoRandomBones = Value end)
+
+-- UI: TELEPORT TAB
+TeleportTab:AddDropdown("IslandDropdown", {
+    Title = "Chọn Đảo (Sea " .. tostring(CurrentSea) .. ")",
+    Values = IslandList,
+    Multi = false,
+    Default = 1,
+}):OnChanged(function(Value)
+    if TargetPositions[Value] then
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = TargetPositions[Value]
+    end
+end)
+
+-- UI: RACE V4 & ESP
+RaceV4Tab:AddToggle("ESPMirage", {Title = "🐳 ESP Đảo Mirage", Default = false}):OnChanged(function(Value) getgenv().ESPMirage = Value end)
+RaceV4Tab:AddToggle("ESPGear", {Title = "⚙️ ESP Bánh Răng V4", Default = false}):OnChanged(function(Value) getgenv().ESPGear = Value end)
+ESPTab:AddToggle("ESPFruit", {Title = "🍓 ESP Trái Ác Quỷ", Default = false}):OnChanged(function(Value) getgenv().ESPFruit = Value end)
+ESPTab:AddToggle("ESPPlayer", {Title = "👤 ESP Người Chơi", Default = false}):OnChanged(function(Value) getgenv().ESPPlayer = Value end)
+
+-- ============================================================================
+-- 4. FIX NÚT BẬT TẮT HÌNH VUÔNG (MOBILE)
+-- ============================================================================
+local CoreGui = game:GetService("CoreGui")
+if CoreGui:FindFirstChild("ChizHauu_Toggle") then CoreGui["ChizHauu_Toggle"]:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "ChizHauu_Toggle"
+
+local ToggleBtn = Instance.new("ImageButton", ScreenGui)
+ToggleBtn.Size = UDim2.new(0, 55, 0, 55)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.Image = MenuIconID
+ToggleBtn.Draggable = true -- Có thể kéo thả
+
+local UICorner = Instance.new("UICorner", ToggleBtn)
+UICorner.CornerRadius = UDim.new(0, 0) -- HÌNH VUÔNG
+
+local UIStroke = Instance.new("UIStroke", ToggleBtn)
+UIStroke.Color = Color3.fromRGB(0, 255, 127)
+UIStroke.Thickness = 2.5
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    local FluentUI = CoreGui:FindFirstChild("Fluent")
+    if FluentUI then FluentUI.Enabled = not FluentUI.Enabled end
+end)
+
+-- ============================================================================
+-- 5. LOGIC FARM & FIX LỖI QUÁI BAY CAO
+-- ============================================================================
+local function GetQuestData()
+    local lv = game.Players.LocalPlayer.Data.Level.Value
+    if CurrentSea == 1 then
+        if lv < 15 then return "BanditQuest1", 1, "Bandit", CFrame.new(1059, 16, 1550), CFrame.new(1145, 22, 1630)
+        elseif lv < 30 then return "JungleQuest", 1, "Monkey", CFrame.new(-1598, 36, 153), CFrame.new(-1610, 40, 145)
+        else return "MarineQuest", 1, "Subordinate", CFrame.new(-2439, 73, 1470), CFrame.new(-2540, 10, 1320) end
+    elseif CurrentSea == 3 then
+        return "HauntedCastleQuest", 1, "Reborn Skeleton", CFrame.new(-9515, 160, 5520), CFrame.new(-9600, 165, 5600)
+    end
+end
+
+function BringMobsToPlayer(mobName)
+    pcall(function()
+        local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+            if v.Name == mobName and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                -- FIX: Ép quái xuống thấp hẳn (-12 studs) để nhân vật đấm trúng
+                v.HumanoidRootPart.CFrame = hrp.CFrame * CFrame.new(0, -12, -5)
+                v.HumanoidRootPart.CanCollide = false
+            end
+        end
+    end)
+end
+
+task.spawn(function()
+    while task.wait() do
+        if getgenv().Kaitun then
+            pcall(function()
+                local qName, qID, mobName, npcPos, mobPos = GetQuestData()
+                local hasQuest = game.Players.LocalPlayer.PlayerGui.Main.Quest.Visible
+                
+                if not hasQuest then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = npcPos
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", qName, qID)
+                else
+                    local TargetMob = game:GetService("Workspace").Enemies:FindFirstChild(mobName)
+                    if TargetMob and TargetMob.Humanoid.Health > 0 then
+                        -- Nhân vật bay cao trên quái 10 studs
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = TargetMob.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
+                        BringMobsToPlayer(mobName)
+                        game:GetService("VirtualUser"):CaptureController()
+                        game:GetService("VirtualUser"):ClickButton1(Vector2.new(50, 50))
+                    else
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = mobPos
+                    end
+                end
+            end)
+        elseif getgenv().AutoFarmBones and CurrentSea == 3 then
+             BringMobsToPlayer("Reborn Skeleton")
+             game:GetService("VirtualUser"):ClickButton1(Vector2.new(50, 50))
+        end
+    end
+end)
+
+-- 6. HỆ THỐNG ESP HIGHLIGHT (CHẠY NGẦM)
+function ApplyESP(t, c)
+    if not t:FindFirstChild("Highlight_ESP") then
+        local h = Instance.new("Highlight", t)
+        h.Name = "Highlight_ESP"
+        h.FillColor = c
+        h.FillTransparency = 0.5
+    end
+end
+
+task.spawn(function()
+    while task.wait(2) do
+        if getgenv().ESPPlayer then
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p ~= game.Players.LocalPlayer and p.Character then ApplyESP(p.Character, Color3.fromRGB(0, 255, 120)) end
+            end
+        end
+    end
+end)
+
+Fluent:Notify({Title = "ChizHauu", Content = "Hệ thống Full Sea đã sẵn sàng!", Duration = 5})
