@@ -1,0 +1,263 @@
+-- ============================================================================
+-- 1. BIẾN MÔI TRƯỜNG, CẤU HÌNH & ICON MENU
+-- ============================================================================
+getgenv().Kaitun = false
+getgenv().AutoSeaEvent = false
+getgenv().AutoRaid = false
+getgenv().FastAttack = true 
+
+-- CẤU HÌNH ICON MENU
+local MenuIconID = "rbxassetid://15121650304" -- Icon hình Logo Gaming sắc nét
+
+-- Cấu hình hệ thống Định vị (ESP)
+getgenv().ESPMirage = false
+getgenv().ESPGear = false
+getgenv().ESPSeaMonster = false
+getgenv().ESPFruit = false
+getgenv().ESPPlayer = false
+
+-- ============================================================================
+-- 2. KHỞI TẠO GIAO DIỆN TRONG SUỐT (TRANSPARENT UI)
+-- ============================================================================
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Window = Fluent:CreateWindow({
+    Title = "ChizHauu", 
+    SubTitle = "Redz Hub Integration", 
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false, 
+    Theme = "Dark"
+})
+
+pcall(function()
+    if game:GetService("CoreGui"):FindFirstChild("Fluent") then
+        local MainFrame = game:GetService("CoreGui").Fluent:FindFirstChild("Main", true)
+        if MainFrame then
+            MainFrame.BackgroundTransparency = 0.5 
+            if MainFrame:FindFirstChild("Blur") then
+                MainFrame.Blur:Destroy() 
+            end
+        end
+    end
+end)
+
+-- Tạo các Tab trên Menu
+local MainTab = Window:AddTab({ Title = "Main Kaitun", Icon = "home" })
+local BoneTab = Window:AddTab({ Title = "Auto Bones", Icon = "skull" }) 
+local TeleportTab = Window:AddTab({ Title = "Teleport Island", Icon = "map-pin" }) 
+local EventTab = Window:AddTab({ Title = "Sea Event", Icon = "waves" })
+local RaidTab = Window:AddTab({ Title = "Auto Raid", Icon = "swords" })
+local RaceV4Tab = Window:AddTab({ Title = "Up Race V4", Icon = "star" }) 
+local ESPTab = Window:AddTab({ Title = "ESP / Định vị", Icon = "eye" })
+
+-- ============================================================================
+-- TÍCH HỢP REDZ HUB VÀO TAB CHÍNH (MAIN TAB)
+-- ============================================================================
+MainTab:AddParagraph({
+    Title = "🔥 REDZ HUB INTEGRATION",
+    Content = "Nhấn nút bên dưới để khởi chạy hệ thống Kaitun chuyên nghiệp của Redz Hub (Tự động Level 1-Max, Auto Farm, Stats...)"
+})
+
+MainTab:AddButton({
+    Title = "🚀 Khởi Chạy Redz Hub (Kaitun Max Level)",
+    Description = "Bản Script tối ưu chống crash, tự động chuyển đảo từ Sea 1 -> Sea 3",
+    Callback = function()
+        Fluent:Notify({Title = "ChizHauu", Content = "Đang tải Redz Hub... Vui lòng đợi trong giây lát!", Duration = 5})
+        -- Thực thi mã nguồn chính thức của Redz Hub Blox Fruits
+        local status, err = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/REDZ3929/REDZHUB/main/redz3929"))()
+        end)
+        if not status then
+            Fluent:Notify({Title = "Lỗi", Content = "Không thể tải Redz Hub, hãy kiểm tra lại executor!", Duration = 5})
+        end
+    end
+})
+
+-- Các nút cũ giữ lại làm tính năng phụ trợ
+local KaitunToggle = MainTab:AddToggle("KaitunToggle", {Title = "Kaitun Mẫu (Chỉ chạy Lv 1-30)", Default = false})
+KaitunToggle:OnChanged(function(Value) getgenv().Kaitun = Value end)
+
+-- Toggles cho Tab Auto Bones
+local FarmBoneToggle = BoneTab:AddToggle("FarmBoneToggle", {Title = "☠️ Auto Farm Xương", Default = false})
+FarmBoneToggle:OnChanged(function(Value) getgenv().AutoFarmBones = Value end)
+
+local RandomBoneToggle = BoneTab:AddToggle("RandomBoneToggle", {Title = "🎁 Auto Random Xương", Default = false})
+RandomBoneToggle:OnChanged(function(Value) getgenv().AutoRandomBones = Value end)
+
+local SeaToggle = EventTab:AddToggle("SeaToggle", {Title = "Auto Sea Event", Default = false})
+SeaToggle:OnChanged(function(Value) getgenv().AutoSeaEvent = Value end)
+
+local RaidToggle = RaidTab:AddToggle("RaidToggle", {Title = "Auto Raid", Default = false})
+RaidToggle:OnChanged(function(Value) getgenv().AutoRaid = Value end)
+
+-- CÁC NÚT GẠT ĐỊNH VỊ TRONG ESPTAB
+local ESPFruitToggle = ESPTab:AddToggle("ESPFruitToggle", {Title = "🍓 Định vị Trái Ác Quỷ", Default = false})
+ESPFruitToggle:OnChanged(function(Value) getgenv().ESPFruit = Value end)
+
+local ESPPlayerToggle = ESPTab:AddToggle("ESPPlayerToggle", {Title = "👤 Định vị Người Chơi", Default = false})
+ESPPlayerToggle:OnChanged(function(Value) getgenv().ESPPlayer = Value end)
+
+local ESPMirageToggle = ESPTab:AddToggle("ESPMirageToggle", {Title = "Định vị Đảo Mirage", Default = false})
+ESPMirageToggle:OnChanged(function(Value) getgenv().ESPMirage = Value end)
+
+local ESPGearToggle = ESPTab:AddToggle("ESPGearToggle", {Title = "Định vị Bánh Răng (Gear V4)", Default = false})
+ESPGearToggle:OnChanged(function(Value) getgenv().ESPGear = Value end)
+
+-- Menu chọn đảo tự động dịch chuyển
+local IslandDropdown = TeleportTab:AddDropdown("IslandDropdown", {
+    Title = "Chọn Đảo Muốn Đến",
+    Values = {"Starter Island", "Jungle", "Pirate Village", "The Cafe", "Castle on the Sea", "Hydra Island", "Floating Turtle", "Haunted Castle"},
+    Multi = false,
+    Default = 1,
+})
+-- (Giữ nguyên cấu hình tọa độ đảo phía bên dưới để bạn sử dụng song song)
+
+-- ============================================================================
+-- HỆ THỐNG NÚT BẤM HÌNH ẢNH (MENU TOGGLE BUTTON)
+-- ============================================================================
+if game:GetService("CoreGui"):FindFirstChild("ChizHauu_MobileToggleFix") then
+    game:GetService("CoreGui")["ChizHauu_MobileToggleFix"]:Destroy()
+end
+
+local MenuVisible = true
+local MobileGui = Instance.new("ScreenGui")
+MobileGui.Name = "ChizHauu_MobileToggleFix"
+MobileGui.Parent = game:GetService("CoreGui")
+
+local ToggleButton = Instance.new("ImageButton")
+ToggleButton.Name = "ToggleBtn"
+ToggleButton.Parent = MobileGui
+ToggleButton.Size = UDim2.new(0, 60, 0, 60) 
+ToggleButton.Position = UDim2.new(0.02, 0, 0.25, 0) 
+ToggleButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ToggleButton.Image = MenuIconID 
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = ToggleButton
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(0, 255, 150) 
+UIStroke.Thickness = 2.5
+UIStroke.Parent = ToggleButton
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MenuVisible = not MenuVisible
+    local Success, UI = pcall(function()
+        return game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("CoreGui"):FindFirstChild("ScreenGui", true)
+    end)
+    if Success and UI then UI.Enabled = MenuVisible end
+end)
+
+-- Hệ thống kéo thả nút bấm di chuyển trên màn hình điện thoại
+local UserInputService = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    ToggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+ToggleButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then update(input) end
+end)
+
+-- ============================================================================
+-- CÁC LOGIC ESP / DỊCH CHUYỂN PHỤ TRỢ (Để code hoạt động đầy đủ)
+-- ============================================================================
+local IslandPositions = {
+    ["Starter Island"] = CFrame.new(1059, 16, 1550),
+    ["Jungle"] = CFrame.new(-1598, 36, 153),
+    ["Pirate Village"] = CFrame.new(-1120, 4, 3855),
+    ["The Cafe"] = CFrame.new(-380, 73, 297),
+    ["Castle on the Sea"] = CFrame.new(-5045, 315, -3150),
+    ["Hydra Island"] = CFrame.new(5210, 600, 345),
+    ["Floating Turtle"] = CFrame.new(-2850, 530, -4300),
+    ["Haunted Castle"] = CFrame.new(-9515, 160, 5520)
+}
+
+IslandDropdown:OnChanged(function(Value)
+    if IslandPositions[Value] then
+        Teleport(IslandPositions[Value])
+    end
+end)
+
+function Teleport(targetCFrame)
+    local player = game.Players.LocalPlayer
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = targetCFrame
+    end
+end
+
+function CreateESP(object, text, color, customName)
+    local tag = customName or "ChizHauu_ESP"
+    if object and not object:FindFirstChild(tag) then
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = tag
+        billboard.AlwaysOnTop = true
+        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.Parent = object
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = color
+        label.TextSize = 14
+        label.Font = Enum.Font.SourceSansBold
+        label.Parent = billboard
+    end
+end
+
+function RemoveESP(object, customName)
+    local tag = customName or "ChizHauu_ESP"
+    if object and object:FindFirstChild(tag) then object[tag]:Destroy() end
+end
+
+task.spawn(function()
+    while task.wait(1.5) do
+        if getgenv().ESPFruit then
+            for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+                if v:IsA("Tool") and (string.find(v.Name, "Fruit") or string.find(v.Name, "Trái")) then
+                    local handle = v:FindFirstChild("Handle")
+                    if handle then CreateESP(handle, "🍓 " .. v.Name, Color3.fromRGB(255, 0, 100), "Fruit_ESP") end
+                end
+            end
+        else
+            for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+                local handle = v:FindFirstChild("Handle") or v:FindFirstChildOfClass("BasePart")
+                if handle then RemoveESP(handle, "Fruit_ESP") end
+            end
+        end
+
+        if getgenv().ESPPlayer then
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    CreateESP(p.Character.HumanoidRootPart, "👤 " .. p.Name, Color3.fromRGB(0, 255, 100), "Player_ESP")
+                end
+            end
+        else
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then RemoveESP(p.Character.HumanoidRootPart, "Player_ESP") end
+            end
+        end
+    end
+end)
+
+Fluent:Notify({Title = "ChizHauu", Content = "Đã tích hợp menu mở Redz Hub thành công!", Duration = 5})
