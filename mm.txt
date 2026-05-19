@@ -1,0 +1,102 @@
+-- ============================================================================
+-- CHIZHAUU FINAL MASTER SCRIPT (ALL-IN-ONE)
+-- ============================================================================
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Window = Fluent:CreateWindow({Title = "ChizHauu Pro", SubTitle = "Full System", TabWidth = 160, Size = UDim2.fromOffset(580, 460), Theme = "Dark"})
+
+-- Biến cấu hình toàn cục
+getgenv().Kaitun = false
+getgenv().ESPPlayer = false
+getgenv().ESPFruit = false
+
+-- TAB CHÍNH
+local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
+
+MainTab:AddToggle("KaitunToggle", {Title = "🚀 Auto Farm (A-Z)", Default = false}):OnChanged(function(Value) getgenv().Kaitun = Value end)
+ESPTab:AddToggle("ESPPlayer", {Title = "👤 ESP Người Chơi", Default = false}):OnChanged(function(Value) getgenv().ESPPlayer = Value end)
+ESPTab:AddToggle("ESPFruit", {Title = "🍓 ESP Trái Ác Quỷ", Default = false}):OnChanged(function(Value) getgenv().ESPFruit = Value end)
+
+-- 1. LOGIC GOM QUÁI & AUTO FARM
+function BringMobs(mobName)
+    pcall(function()
+        local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+            if v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 and string.find(v.Name, mobName) then
+                if (v.HumanoidRootPart.Position - hrp.Position).Magnitude < 400 then
+                    v.HumanoidRootPart.CFrame = hrp.CFrame * CFrame.new(0, -10, -5)
+                    v.HumanoidRootPart.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+task.spawn(function()
+    while task.wait(0.2) do
+        if getgenv().Kaitun then
+            pcall(function()
+                local qName, qID, mobName, npcPos, mobPos = GetQuestData()
+                local mainGui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("Main")
+                if mainGui and mainGui:FindFirstChild("Quest") and not mainGui.Quest.Visible then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = npcPos
+                    task.wait(1)
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", qName, qID)
+                else
+                    BringMobs(mobName)
+                    local VirtualUser = game:GetService("VirtualUser")
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton1(Vector2.new(50, 50))
+                end
+            end)
+        end
+    end
+end)
+
+-- 2. HỆ THỐNG ESP (PLAYER + FRUIT)
+task.spawn(function()
+    while task.wait(2) do
+        -- ESP Player
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if getgenv().ESPPlayer and p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+                if not p.Character.Head:FindFirstChild("PlayerESP") then
+                    local billboard = Instance.new("BillboardGui", p.Character.Head)
+                    billboard.Name = "PlayerESP"
+                    billboard.Size = UDim2.new(0, 150, 0, 50)
+                    billboard.AlwaysOnTop = true
+                    local label = Instance.new("TextLabel", billboard)
+                    label.Size = UDim2.new(1,0,1,0); label.BackgroundTransparency = 1; label.TextColor3 = Color3.new(1,1,1)
+                    label.Text = p.Name .. "\n❤️: " .. math.floor(p.Character.Humanoid.Health)
+                end
+            elseif not getgenv().ESPPlayer and p.Character and p.Character:FindFirstChild("Head"):FindFirstChild("PlayerESP") then
+                p.Character.Head.PlayerESP:Destroy()
+            end
+        end
+        -- ESP Fruit
+        for _, v in pairs(game.Workspace:GetChildren()) do
+            if getgenv().ESPFruit and string.find(v.Name, "Fruit") and v:FindFirstChild("Handle") and not v.Handle:FindFirstChild("FruitESP") then
+                local b = Instance.new("BillboardGui", v.Handle)
+                b.Name = "FruitESP"; b.Size = UDim2.new(0, 200, 0, 50); b.AlwaysOnTop = true
+                local l = Instance.new("TextLabel", b)
+                l.Size = UDim2.new(1,0,1,0); l.BackgroundTransparency = 1; l.TextColor3 = Color3.new(1,1,0); l.Text = v.Name
+            elseif not getgenv().ESPFruit and v:FindFirstChild("Handle") and v.Handle:FindFirstChild("FruitESP") then
+                v.Handle.FruitESP:Destroy()
+            end
+        end
+    end
+end)
+
+-- 3. NÚT BẬT TẮT VUÔNG
+local CoreGui = game:GetService("CoreGui")
+if CoreGui:FindFirstChild("ChizHauu_Toggle") then CoreGui["ChizHauu_Toggle"]:Destroy() end
+local ToggleBtn = Instance.new("ImageButton", Instance.new("ScreenGui", CoreGui))
+ToggleBtn.Name = "ChizHauu_Toggle"; ToggleBtn.Size = UDim2.new(0, 50, 0, 50); ToggleBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ToggleBtn.Image = "rbxassetid://15121650304"; ToggleBtn.Draggable = true
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 0)
+Instance.new("UIStroke", ToggleBtn).Color = Color3.fromRGB(0, 255, 127)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    local f = CoreGui:FindFirstChild("Fluent")
+    if f then f.Enabled = not f.Enabled end
+end)
