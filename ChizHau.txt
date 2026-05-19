@@ -1,0 +1,507 @@
+-- ============================================================================
+-- 1. BIẾN MÔI TRƯỜNG & CẤU HÌNH (SETTINGS)
+-- ============================================================================
+getgenv().Kaitun = false
+getgenv().AutoSeaEvent = false
+getgenv().AutoRaid = false
+getgenv().FastAttack = true 
+
+-- Cấu hình bổ sung cho tính năng Up V4
+getgenv().AutoMirage = false
+getgenv().AutoPullLever = false
+getgenv().AutoFindGear = false
+getgenv().AutoTrial = false
+
+-- Cấu hình bổ sung cho tính năng Định vị (ESP)
+getgenv().ESPMirage = false
+getgenv().ESPGear = false
+getgenv().ESPSeaMonster = false
+
+-- ============================================================================
+-- 2. KHỞI TẠO GIAO DIỆN TRONG SUỐT (TRANSPARENT UI)
+-- ============================================================================
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Window = Fluent:CreateWindow({
+    Title = "ChizHauu", 
+    SubTitle = "", 
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false, 
+    Theme = "Dark"
+})
+
+pcall(function()
+    if game:GetService("CoreGui"):FindFirstChild("Fluent") then
+        local MainFrame = game:GetService("CoreGui").Fluent:FindFirstChild("Main", true)
+        if MainFrame then
+            MainFrame.BackgroundTransparency = 0.5 
+            if MainFrame:FindFirstChild("Blur") then
+                MainFrame.Blur:Destroy() 
+            end
+        end
+    end
+end)
+
+-- Tạo các Tab trên Menu
+local MainTab = Window:AddTab({ Title = "Main Kaitun", Icon = "home" })
+local TeleportTab = Window:AddTab({ Title = "Teleport Island", Icon = "map-pin" }) 
+local EventTab = Window:AddTab({ Title = "Sea Event", Icon = "waves" })
+local RaidTab = Window:AddTab({ Title = "Auto Raid", Icon = "swords" })
+local RaceV4Tab = Window:AddTab({ Title = "Up Race V4", Icon = "star" }) 
+local ESPTab = Window:AddTab({ Title = "ESP / Định vị", Icon = "eye" })
+
+-- Thêm các nút Bật/Tắt (Toggles) vào giao diện chính
+local KaitunToggle = MainTab:AddToggle("KaitunToggle", {Title = "Kaitun (Auto Level 1-Max)", Default = false})
+KaitunToggle:OnChanged(function(Value) getgenv().Kaitun = Value end)
+
+local SeaToggle = EventTab:AddToggle("SeaToggle", {Title = "Auto Sea Event (Săn SB/Thuyền)", Default = false})
+SeaToggle:OnChanged(function(Value) getgenv().AutoSeaEvent = Value end)
+
+local RaidToggle = RaidTab:AddToggle("RaidToggle", {Title = "Auto Raid (Mua Chip + Đi Đảo)", Default = false})
+RaidToggle:OnChanged(function(Value) getgenv().AutoRaid = Value end)
+
+-- Các nút gạt cho tính năng Up V4
+local MirageToggle = RaceV4Tab:AddToggle("MirageToggle", {Title = "Auto Teleport Mirage Island", Default = false})
+MirageToggle:OnChanged(function(Value) getgenv().AutoMirage = Value end)
+
+local LeverToggle = RaceV4Tab:AddToggle("LeverToggle", {Title = "Auto Gạt Cần (Pull Lever)", Default = false})
+LeverToggle:OnChanged(function(Value) getgenv().AutoPullLever = Value end)
+
+local GearToggle = RaceV4Tab:AddToggle("GearToggle", {Title = "Auto Tìm & Nhặt Gear (Bánh Răng)", Default = false})
+GearToggle:OnChanged(function(Value) getgenv().AutoFindGear = Value end)
+
+local TrialToggle = RaceV4Tab:AddToggle("TrialToggle", {Title = "Auto Trial (Tự Động Gồng Tộc Đánh)", Default = false})
+TrialToggle:OnChanged(function(Value) getgenv().AutoTrial = Value end)
+
+-- Các nút gạt Định vị trong ESPTab
+local ESPMirageToggle = ESPTab:AddToggle("ESPMirageToggle", {Title = "Định vị Đảo Mirage", Default = false})
+ESPMirageToggle:OnChanged(function(Value) getgenv().ESPMirage = Value end)
+
+local ESPGearToggle = ESPTab:AddToggle("ESPGearToggle", {Title = "Định vị Bánh Răng (Gear V4)", Default = false})
+ESPGearToggle:OnChanged(function(Value) getgenv().ESPGear = Value end)
+
+local ESPSeaToggle = ESPTab:AddToggle("ESPSeaToggle", {Title = "Định vị Sea Beast / Quái biển", Default = false})
+ESPSeaToggle:OnChanged(function(Value) getgenv().ESPSeaMonster = Value end)
+
+-- Menu chọn đảo tự động dịch chuyển trong Tab Teleport Island
+local IslandDropdown = TeleportTab:AddDropdown("IslandDropdown", {
+    Title = "Chọn Đảo Muốn Đến",
+    Values = {
+        "Starter Island", "Jungle", "Pirate Village", "Desert", "Frozen Village", "Marineford", "Skypiea", "Prison", "Magma Village", "Fontaine", 
+        "The Cafe", "Green Zone", "Kingdom of Rose", "Graveyard", "Snow Mountain", "Hot and Cold", "Cursed Ship", "Ice Castle", "Forgotten Island", 
+        "Castle on the Sea", "Hydra Island", "Floating Turtle", "Port Town", "Great Tree", "Haunted Castle", "Chocolate Island" 
+    },
+    Multi = false,
+    Default = 1,
+})
+
+local IslandPositions = {
+    ["Starter Island"] = CFrame.new(1059, 16, 1550),
+    ["Jungle"] = CFrame.new(-1598, 36, 153),
+    ["Pirate Village"] = CFrame.new(-1120, 4, 3855),
+    ["Desert"] = CFrame.new(1094, 6, 4192),
+    ["Frozen Village"] = CFrame.new(1196, 6, -1154),
+    ["Marineford"] = CFrame.new(-2515, 6, -4289),
+    ["Skypiea"] = CFrame.new(-4602, 874, -1656),
+    ["Prison"] = CFrame.new(4875, 6, 735),
+    ["Magma Village"] = CFrame.new(-5230, 8, 8470),
+    ["Fontaine"] = CFrame.new(5125, 4, 4105),
+    ["The Cafe"] = CFrame.new(-380, 73, 297),
+    ["Green Zone"] = CFrame.new(-2423, 73, -2611),
+    ["Kingdom of Rose"] = CFrame.new(-424, 73, 1836),
+    ["Graveyard"] = CFrame.new(-3364, 73, -120),
+    ["Snow Mountain"] = CFrame.new(935, 402, -1415),
+    ["Hot and Cold"] = CFrame.new(-6095, 15, -4930),
+    ["Cursed Ship"] = CFrame.new(920, 125, 3285),
+    ["Ice Castle"] = CFrame.new(6150, 295, -6740),
+    ["Forgotten Island"] = CFrame.new(-3050, 240, -10150),
+    ["Castle on the Sea"] = CFrame.new(-5045, 315, -3150),
+    ["Hydra Island"] = CFrame.new(5210, 600, 345),
+    ["Floating Turtle"] = CFrame.new(-2850, 530, -4300),
+    ["Port Town"] = CFrame.new(-790, 15, 5450),
+    ["Great Tree"] = CFrame.new(4130, 220, -6370),
+    ["Haunted Castle"] = CFrame.new(-9515, 160, 5520),
+    ["Chocolate Island"] = CFrame.new(215, 25, -12050)
+}
+
+IslandDropdown:OnChanged(function(Value)
+    if IslandPositions[Value] then
+        Fluent:Notify({Title = "Dịch Chuyển", Content = "Đang bay đến: " .. Value, Duration = 3})
+        Teleport(IslandPositions[Value])
+    end
+end)
+
+-- ============================================================================
+-- 2.5 HỆ THỐNG NÚT VUÔNG BẬT/TẮT AN TOÀN (ANTI-ERRORS TOGGLE)
+-- ============================================================================
+local MenuVisible = true
+local MobileGui = Instance.new("ScreenGui")
+MobileGui.Name = "ChizHauu_MobileToggleFix"
+MobileGui.Parent = game:GetService("CoreGui")
+MobileGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleBtn"
+ToggleButton.Parent = MobileGui
+ToggleButton.Size = UDim2.new(0, 55, 0, 55)
+ToggleButton.Position = UDim2.new(0.02, 0, 0.25, 0) 
+ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleButton.Text = "MENU"
+ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 150) 
+ToggleButton.TextSize = 13
+ToggleButton.Font = Enum.Font.SourceSansBold
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10) 
+UICorner.Parent = ToggleButton
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(0, 255, 150)
+UIStroke.Thickness = 2.5
+UIStroke.Parent = ToggleButton
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MenuVisible = not MenuVisible
+    local Success, UI = pcall(function()
+        return game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("CoreGui"):FindFirstChild("ScreenGui", true)
+    end)
+    if Success and UI then UI.Enabled = MenuVisible end
+end)
+
+local UserInputService = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    ToggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+ToggleButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then update(input) end
+end)
+-- ============================================================================
+-- 3. CÁC HÀM BỔ TRỢ HỆ THỐNG (SYSTEM FUNCTIONS)
+-- ============================================================================
+
+function Teleport(targetCFrame)
+    local player = game.Players.LocalPlayer
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.Anchored = false
+        local tweenService = game:GetService("TweenService")
+        local distance = (player.Character.HumanoidRootPart.Position - targetCFrame.Position).Magnitude
+        local speed = 350 
+        local info = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
+        local tween = tweenService:Create(player.Character.HumanoidRootPart, info, {CFrame = targetCFrame})
+        tween:Play()
+        tween.Completed:Wait()
+    end
+end
+
+function BringMob(mobName)
+    for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+        if v.Name == mobName and v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+            v.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)
+            v.HumanoidRootPart.CanCollide = false
+            v.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
+        end
+    end
+end
+
+function EquipWeapon()
+    local player = game.Players.LocalPlayer
+    if player.Character and not player.Character:FindFirstChildOfClass("Tool") then
+        local tool = player.Backpack:FindFirstChild("Combat") or player.Backpack:FindFirstChildOfClass("Tool")
+        if tool then player.Character.Humanoid:EquipTool(tool) end
+    end
+end
+
+function Click()
+    local VirtualUser = game:GetService("VirtualUser")
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton1(Vector2.new(1, 1))
+end
+
+function CreateESP(object, text, color)
+    if object and not object:FindFirstChild("ChizHauu_ESP") then
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "ChizHauu_ESP"
+        billboard.AlwaysOnTop = true
+        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 5, 0)
+        billboard.Parent = object
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = color
+        label.TextSize = 16
+        label.Font = Enum.Font.SourceSansBold
+        label.TextStrokeTransparency = 0
+        label.Parent = billboard
+        
+        task.spawn(function()
+            while object and object.Parent and billboard and billboard.Parent do
+                local pms = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if pms then
+                    local dist = math.floor((object.Position - pms.Position).Magnitude)
+                    label.Text = text .. " [" .. dist .. "m]"
+                end
+                task.wait(1)
+            end
+        end)
+    end
+end
+
+function RemoveESP(object)
+    if object and object:FindFirstChild("ChizHauu_ESP") then
+        object["ChizHauu_ESP"]:Destroy()
+    end
+end
+
+-- ============================================================================
+-- 4. VÒNG LẶP XỬ LÝ LOGIC TÍNH NĂNG (MAIN LOOPS)
+-- ============================================================================
+
+-- [LOGIC ĐỊNH VỊ (ESP LOOP)]
+task.spawn(function()
+    while task.wait(2) do
+        local Mirage = game:GetService("Workspace"):FindFirstChild("Mirage Island")
+        if Mirage and Mirage:IsA("Model") and getgenv().ESPMirage then
+            local center = Mirage:FindFirstChild("PrimaryPart") or Mirage:FindFirstChildOfClass("BasePart")
+            if center then CreateESP(center, "🐳 ĐẢO MIRAGE", Color3.fromRGB(0, 255, 255)) end
+        else
+            if Mirage then
+                local center = Mirage:FindFirstChild("PrimaryPart") or Mirage:FindFirstChildOfClass("BasePart")
+                if center then RemoveESP(center) end
+            end
+        end
+
+        if getgenv().ESPGear then
+            for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+                if v.Name == "Gear" or v.Name == "MysteriousGear" or (v:IsA("MeshPart") and v.Size == Vector3.new(3.17, 1.25, 3.17)) then
+                    CreateESP(v, "⚙️ BÁNH RĂNG V4", Color3.fromRGB(255, 215, 0))
+                end
+            end
+        else
+            for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+                if v.Name == "Gear" or v.Name == "MysteriousGear" then RemoveESP(v) end
+            end
+        end
+
+        if getgenv().ESPSeaMonster then
+            for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                if v.Name == "Sea Beast" or v.Name == "Terrorshark" or v.Name == "Piranha" then
+                    local root = v:FindFirstChild("HumanoidRootPart")
+                    if root then CreateESP(root, "👹 " .. v.Name:upper(), Color3.fromRGB(255, 0, 0)) end
+                end
+            end
+        end
+    end
+end)
+
+-- Vòng lặp Fast Attack
+task.spawn(function()
+    while task.wait() do
+        if (getgenv().Kaitun or getgenv().AutoSeaEvent or getgenv().AutoRaid or getgenv().AutoTrial) and getgenv().FastAttack then
+            pcall(function()
+                EquipWeapon()
+                Click()
+            end)
+        else
+            task.wait(0.5)
+        end
+    end
+end)
+
+-- Vòng lặp Auto Level (Kaitun)
+task.spawn(function()
+    while task.wait() do
+        if getgenv().Kaitun then
+            pcall(function()
+                local MyLevel = game.Players.LocalPlayer.Data.Level.Value
+                
+                if MyLevel >= 1 and MyLevel < 15 then
+                    if not game.Players.LocalPlayer.PlayerGui.Main:FindFirstChild("Quest") then
+                        Teleport(CFrame.new(1059, 16, 1550)) 
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", "BanditQuest1", 1)
+                    else
+                        local Mob = game:GetService("Workspace").Enemies:FindFirstChild("Bandit")
+                        if Mob and Mob:FindFirstChild("HumanoidRootPart") then
+                            Teleport(Mob.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0))
+                            BringMob("Bandit")
+                        else
+                            local Spawn = game:GetService("Workspace").EnemySpawns:FindFirstChild("Bandit")
+                            if Spawn then Teleport(Spawn.CFrame) end
+                        end
+                    end
+                
+                elseif MyLevel >= 15 and MyLevel < 30 then
+                    if not game.Players.LocalPlayer.PlayerGui.Main:FindFirstChild("Quest") then
+                        Teleport(CFrame.new(-1598, 36, 153))
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", "JungleQuest", 1)
+                    else
+                        local Mob = game:GetService("Workspace").Enemies:FindFirstChild("Monkey")
+                        if Mob and Mob:FindFirstChild("HumanoidRootPart") then
+                            Teleport(Mob.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0))
+                            BringMob("Monkey")
+                        else
+                            local Spawn = game:GetService("Workspace").EnemySpawns:FindFirstChild("Monkey")
+                            if Spawn then Teleport(Spawn.CFrame) end
+                        end
+                    end
+                else
+                    MainTab:AddParagraph({Title = "Thông báo", Content = "Đã vượt mốc Level cấu hình demo!"})
+                    getgenv().Kaitun = false
+                end
+            end)
+        else
+            task.wait(0.5)
+        end
+    end
+end)
+
+-- Vòng lặp Sea Event
+task.spawn(function()
+    while task.wait() do
+        if getgenv().AutoSeaEvent then
+            pcall(function()
+                local SeaMonster = game:GetService("Workspace").Enemies:FindFirstChild("Sea Beast") 
+                    or game:GetService("Workspace").Enemies:FindFirstChild("Terrorshark")
+                    or game:GetService("Workspace").Enemies:FindFirstChild("Piranha")
+                
+                if SeaMonster and SeaMonster:FindFirstChild("HumanoidRootPart") then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = SeaMonster.HumanoidRootPart.CFrame * CFrame.new(0, 45, 0)
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true 
+                    
+                    local Input = game:GetService("VirtualInputManager")
+                    Input:SendKeyEvent(true, Enum.KeyCode.Z, false, game) task.wait(0.05)
+                    Input:SendKeyEvent(true, Enum.KeyCode.X, false, game)
+                else
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
+                    local Boat = game:GetService("Workspace").Boats:FindFirstChildOfClass("Model")
+                    if Boat and Boat:FindFirstChild("VehicleSeat") then
+                        Teleport(Boat.VehicleSeat.CFrame)
+                        Boat.VehicleSeat.Throttle = 1
+                    end
+                end
+            end)
+        else
+            task.wait(0.5)
+        end
+    end
+end)
+
+-- Vòng lặp Auto Raid
+task.spawn(function()
+    while task.wait() do
+        if getgenv().AutoRaid then
+            pcall(function()
+                if not game:GetService("Workspace"):FindFirstChild("Map") then 
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward", "Flame", "Buy")
+                    task.wait(0.5)
+                    Teleport(CFrame.new(-2111, 15, -2411)) 
+                    task.wait(0.5)
+                    if game:GetService("Workspace").Map:FindFirstChild("RaidRoom") then
+                        fireclickdetector(game:GetService("Workspace").Map.RaidRoom.Button.ClickDetector)
+                    end
+                else
+                    local RaidMob = game:GetService("Workspace").Enemies:FindFirstChildOfClass("Model")
+                    if RaidMob and RaidMob:FindFirstChild("HumanoidRootPart") and RaidMob:FindFirstChild("Humanoid") and RaidMob.Humanoid.Health > 0 then
+                        Teleport(RaidMob.HumanoidRootPart.CFrame * CFrame.new(0, 12, 0))
+                        BringMob(RaidMob.Name)
+                    else
+                        for i = 1, 5 do
+                            local NextIsland = game:GetService("Workspace").Map:FindFirstChild("Island" .. i)
+                            if NextIsland then
+                                Teleport(NextIsland.PrimaryPart.CFrame * CFrame.new(0, 80, 0))
+                                break
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            task.wait(0.5)
+        end
+    end
+end)
+
+-- Vòng lặp Auto V4 nâng cao
+task.spawn(function()
+    while task.wait() do
+        local running = false
+        if getgenv().AutoMirage then
+            running = true
+            pcall(function()
+                local Mirage = game:GetService("Workspace"):FindFirstChild("Mirage Island")
+                if Mirage then Teleport(Mirage:GetModelCFrame() * CFrame.new(0, 200, 0)) end
+            end)
+        end
+        if getgenv().AutoPullLever then
+            running = true
+            pcall(function()
+                local Lever = game:GetService("Workspace").Map:FindFirstChild("Lever") or game:GetService("Workspace"):FindFirstChild("Lever")
+                if Lever and Lever:FindFirstChild("ClickDetector") then
+                    Teleport(Lever.CFrame * CFrame.new(0, 2, 0))
+                    fireclickdetector(Lever.ClickDetector)
+                end
+            end)
+        end
+        if getgenv().AutoFindGear then
+            running = true
+            pcall(function()
+                for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+                    if v.Name == "Gear" or v.Name == "MysteriousGear" or (v:IsA("MeshPart") and v.Size == Vector3.new(3.17, 1.25, 3.17)) then
+                        Teleport(v.CFrame * CFrame.new(0, 2, 0))
+                        task.wait(0.5)
+                        local vim = game:GetService("VirtualInputManager")
+                        vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                        task.wait(0.1)
+                        vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                    end
+                end
+            end)
+        end
+        if getgenv().AutoTrial then
+            running = true
+            pcall(function()
+                local Character = game.Players.LocalPlayer.Character
+                if Character and Character:FindFirstChild("Humanoid") then
+                    if game.Players.LocalPlayer.PlayerGui.Main.RaceEnergy.Bar.Size.X.Scale >= 1 then
+                        local vim = game:GetService("VirtualInputManager")
+                        vim:SendKeyEvent(true, Enum.KeyCode.Y, false, game)
+                        task.wait(0.1)
+                        vim:SendKeyEvent(false, Enum.KeyCode.Y, false, game)
+                    end
+                end
+                local TargetPlayerOrMob = game:GetService("Workspace").Enemies:FindFirstChildOfClass("Model")
+                if TargetPlayerOrMob and TargetPlayerOrMob:FindFirstChild("HumanoidRootPart") then
+                    Teleport(TargetPlayerOrMob.HumanoidRootPart.CFrame * CFrame.new(0, 8, 0))
+                    BringMob(TargetPlayerOrMob.Name)
+                end
+            end)
+        end
+        if not running then task.wait(0.5) end
+    end
+end)
+
+-- Khởi chạy thông báo thành công
+Fluent:Notify({Title = "ChizHauu", Content = "Tải toàn bộ cấu hình thành công!", Duration = 5})
